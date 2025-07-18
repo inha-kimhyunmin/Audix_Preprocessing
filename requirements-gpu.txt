@@ -1,0 +1,15 @@
+# requirements.txt (GPU 버전)
+torch==2.1.0+cu118           # CUDA 11.8 기반 (CUDA 버전에 따라 바꿔야 함)
+torchaudio==2.1.0+cu118
+--extra-index-url https://download.pytorch.org/whl/cu118
+
+numpy==1.24.0
+scipy>=1.7.0
+librosa>=0.10.0
+noisereduce>=2.0.1
+sounddevice>=0.4.6
+omegaconf>=2.2.2
+
+# Demucs 및 Dora 설치
+demucs @ git+https://github.com/facebookresearch/demucs.git
+dora-search @ git+https://github.com/facebookresearch/dora.git
