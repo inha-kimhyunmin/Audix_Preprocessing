@@ -14,3 +14,4 @@ noisereduce>=2.0.1
 sounddevice>=0.4.6
 omegaconf>=2.2.2
 
+ #pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121

@@ -7,7 +7,7 @@ def load_noise_clip():
     배경 잡음 샘플을 로드합니다.
     :return: 배경 잡음 샘플 (numpy 배열)
     """
-    return torch.load(NOISE_SAMPLE_PATH).numpy()
+    return torch.load(NOISE_SAMPLE_PATH, weights_only=True).numpy()
 
 def denoise(audio_np, noise_clip=None):
     """

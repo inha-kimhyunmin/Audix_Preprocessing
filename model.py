@@ -13,7 +13,7 @@ def load_model():
     
     model = HTDemucs(sources=SOURCES)
 
-    state_dict = torch.load(MODEL_PATH, map_location=DEVICE)
+    state_dict = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=True)
     model.load_state_dict(state_dict, strict=False)
 
     model.to(DEVICE)
