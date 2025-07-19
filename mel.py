@@ -18,9 +18,10 @@ def save_mel_tensor(source_tensor, mic_idx, source_name, timestamp_str, parts_to
     """
     if parts_to_save is not None and source_name not in parts_to_save:
         return
+
     # ✅ 멀티채널일 경우 첫 번째 채널만 선택
     if source_tensor.dim() == 2 and source_tensor.size(0) > 1:
-        source_tensor = source_tensor[0].unsqueeze(0)  # [1, time]
+        source_tensor = source_tensor[0:1]  # [1, time] - 더 효율적
 
     # 샘플링 주파수가 다르면 Resample
     if SAMPLE_RATE != MEL_SAMPLE_RATE:
@@ -40,18 +41,24 @@ def save_mel_tensor(source_tensor, mic_idx, source_name, timestamp_str, parts_to
     with torch.no_grad():
         mel = mel_transform(source_tensor)           # [1, 128, time]
         mel = db_transform(mel)                      # dB 변환
+        
+        # 한 번만 정규화 적용
         mel = (mel - mel.mean()) / (mel.std() + 1e-9)  # z-score 정규화
+        
+        # 크기 조정
         mel = torch.nn.functional.interpolate(
             mel.unsqueeze(0), size=MEL_SIZE, mode='bilinear', align_corners=False
         ).squeeze(0)                                 # [1, 240, 240]
 
-    mel = (mel - mel.mean()) / mel.std()
-    # 크기 보정 및 저장 준비
-    mel = torch.nn.functional.pad(mel, (0, max(0, MEL_SIZE[0] - mel.shape[-1])))
-    mel = mel[:, :MEL_SIZE[0]]
+    # 패딩 및 크롭 (이미 정규화된 데이터에 대해)
+    mel = torch.nn.functional.pad(mel, (0, max(0, MEL_SIZE[1] - mel.shape[-1])))
+    mel = mel[:, :MEL_SIZE[0], :MEL_SIZE[1]]
+    
     # 저장
     folder = os.path.join(OUTPUT_FOLDER, timestamp_str, f"mic_{mic_idx}")
     os.makedirs(folder, exist_ok=True)
     path = os.path.join(folder, f"{source_name}.pt")
     torch.save(mel, path)
     print(f"✅ 저장 완료: {path}")
+    
+    return mel  # 반환값 추가 (디버깅 용도)

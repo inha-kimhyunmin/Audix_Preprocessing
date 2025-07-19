@@ -1,46 +1,61 @@
 import os
 import torchaudio
-import torch
 from datetime import datetime
-from mel import save_mel_tensor  # 기존 함수 import
+from mel import save_mel_tensor
 from config import SAMPLE_RATE, OUTPUT_FOLDER
 
 # === 사용자 설정 ===
-INPUT_FOLDER = "C:/Users/dotor/Desktop/2025_KEB_Project/Data/bearing_faulty"  # 부품 오디오들이 있는 폴더
+INPUT_FOLDER = "D:/machine_sounds"
 MIC_IDX = 0
-SOURCE_NAME = "bearing_faulty"  # 예: 'fan', 'pump', ...
-TIMESTAMP_STR = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # 새로 만들 output 폴더 이름
+TIMESTAMP_STR = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-def convert_all_single_part_audio(input_folder):
-    files = sorted([
-        f for f in os.listdir(input_folder)
-        if f.lower().endswith(('.wav', '.mp3', '.flac'))
-    ])
+def convert_all_audio_recursively(input_folder):
+    folder_counts = {}  # 각 폴더 이름별 카운터
 
-    for idx, file_name in enumerate(files, 1):
-        file_path = os.path.join(input_folder, file_name)
+    for root, _, files in os.walk(input_folder):
+        files = sorted([f for f in files if f.lower().endswith(('.wav', '.mp3', '.flac'))])
+        if not files:
+            continue
 
-        waveform, sr = torchaudio.load(file_path)
+        # 폴더 이름 얻기
+        folder_name = os.path.basename(root)
+        if folder_name == os.path.basename(input_folder):
+            # 최상위 폴더면 스킵 (파일이 있을 경우에만 해당됨)
+            continue
 
-        # 모노 처리
-        if waveform.shape[0] > 1:
-            waveform = waveform.mean(dim=0, keepdim=True)
+        folder_counts.setdefault(folder_name, 1)
 
-        # 리샘플링
-        if sr != SAMPLE_RATE:
-            resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=SAMPLE_RATE)
-            waveform = resampler(waveform)
+        for file_name in files:
+            file_path = os.path.join(root, file_name)
+            try:
+                waveform, sr = torchaudio.load(file_path)
 
-        # 파일 이름: fan001.pt, fan002.pt ...
-        numbered_name = f"{SOURCE_NAME}{idx:03d}"
+                # 모노 처리
+                if waveform.shape[0] > 1:
+                    waveform = waveform.mean(dim=0, keepdim=True)
 
-        save_mel_tensor(
-            source_tensor=waveform,
-            mic_idx=MIC_IDX,
-            source_name=numbered_name,
-            timestamp_str=TIMESTAMP_STR,
-            parts_to_save=None  # 모두 저장
-        )
+                # 리샘플링
+                if sr != SAMPLE_RATE:
+                    resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=SAMPLE_RATE)
+                    waveform = resampler(waveform)
+
+                # 파일 이름: foldername001.pt, foldername002.pt, ...
+                count = folder_counts[folder_name]
+                numbered_name = f"{folder_name}{count:03d}"
+                folder_counts[folder_name] += 1
+
+                save_mel_tensor(
+                    source_tensor=waveform,
+                    mic_idx=MIC_IDX,
+                    source_name=numbered_name,
+                    timestamp_str=TIMESTAMP_STR,
+                    parts_to_save=None
+                )
+
+                print(f"✅ Processed: {file_path} → {numbered_name}")
+
+            except Exception as e:
+                print(f"❌ Failed to process {file_path}: {e}")
 
 if __name__ == "__main__":
-    convert_all_single_part_audio(INPUT_FOLDER)
+    convert_all_audio_recursively(INPUT_FOLDER)

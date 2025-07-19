@@ -3,14 +3,14 @@ import noisereduce as nr
 from config import SAMPLE_RATE, NOISE_SAMPLE_PATH
 
 def load_noise_clip():
-    """"
+    """
     배경 잡음 샘플을 로드합니다.
     :return: 배경 잡음 샘플 (numpy 배열)
     """
     return torch.load(NOISE_SAMPLE_PATH).numpy()
 
 def denoise(audio_np, noise_clip=None):
-    """"
+    """
     오디오 데이터를 잡음 제거합니다.
     :param audio_np: 입력 오디오 데이터 (numpy 배열)
     :param noise_clip: 배경 잡음 샘플 (numpy 배열), None이면 기본 잡음 제거

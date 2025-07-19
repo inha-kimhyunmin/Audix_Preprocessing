@@ -1,13 +1,8 @@
 from demucs.htdemucs import HTDemucs
 import torch
-from torchaudio.transforms import Resample
 from demucs.apply import apply_model
-from config import MODEL_PATH, DEVICE, SAMPLE_RATE, SOURCES, FORCE_STEREO_INPUT
-from monotostereo import mono_to_stereo
+from config import MODEL_PATH, DEVICE, SOURCES, FORCE_STEREO_INPUT
 from resample import maybe_resample
-import time
-
-MAX_SAMPLES = 441000
 
 def load_model():
     """
@@ -34,15 +29,15 @@ def separate(model, audio_np):
     :param model: 로드된 모델
     :param audio_np: 입력 오디오 데이터 (numpy 배열)
     :return: 분리된 소스들 (torch.Tensor)
-    
     """
-    audio = torch.tensor(audio_np, dtype=torch.float32).unsqueeze(1)  # (samples,) → (samples, 1)
+    # numpy to tensor 및 차원 조정
+    audio = torch.from_numpy(audio_np).float().unsqueeze(0)  # (samples,) → (1, samples)
 
-    if FORCE_STEREO_INPUT:  # 현재 모델이 2채널일 경우만 복제
-        audio = audio.repeat(1, 2)  # (samples, 1) → (samples, 2)
+    if FORCE_STEREO_INPUT:  # 모델이 2채널을 요구하는 경우 복제
+        audio = audio.repeat(2, 1)  # (1, samples) → (2, samples)
 
-    # (samples, channels) → (batch=1, channels, samples)
-    audio = audio.transpose(0, 1).unsqueeze(0).to(DEVICE)
+    # (channels, samples) → (batch=1, channels, samples)
+    audio = audio.unsqueeze(0).to(DEVICE)
 
     audio = maybe_resample(audio)
 

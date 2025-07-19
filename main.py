@@ -52,8 +52,8 @@ def process_stream(model, source_names, repeat=5):
             parts_for_mic = CHANNEL_PARTS[mic_idx]
             for src_idx, src in enumerate(sources):
                 src_name = source_names[src_idx]
-                a = save_mel_tensor(src, mic_idx + 1, src_name, timestamp_str, parts_for_mic)
-                print(f"📁 저장 완료: {src_name} (type: {type(a)})")
+                mel_result = save_mel_tensor(src, mic_idx + 1, src_name, timestamp_str, parts_for_mic)
+                print(f"📁 저장 완료: {src_name}")
             end_save = time.time()
             print(f"💾 저장 시간: {(end_save - start_save):.2f}초")
 
