@@ -55,7 +55,7 @@ def save_mel_tensor(source_tensor, mic_idx, source_name, timestamp_str, parts_to
     mel = mel[:, :MEL_SIZE[0], :MEL_SIZE[1]]
     
     # 저장
-    folder = os.path.join(OUTPUT_FOLDER, timestamp_str, f"mic_{mic_idx}")
+    folder = os.path.join(OUTPUT_FOLDER, timestamp_str, f"mic_{mic_idx + 1}")
     os.makedirs(folder, exist_ok=True)
     path = os.path.join(folder, f"{source_name}.pt")
     torch.save(mel, path)
