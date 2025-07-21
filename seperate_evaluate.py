@@ -3,14 +3,11 @@ import torchaudio
 import torch
 import numpy as np
 from model import load_model, separate  # 너의 Demucs 로딩 함수 사용
-from mir_eval.separation import bss_eval_sources
 from pathlib import Path
-#pip install mir_eval
 
 # === 사용자 설정 ===
 FOLDER = "evaluation_folder"
-SOURCES = ['fan', 'pump', 'silder', 'bearing', 'gearbox']
-MODEL_PATH = "model/checkpoint.th"
+SOURCES = ['fan', 'pump', 'slider', 'bearing', 'gearbox']  # 오타 수정: silder -> slider
 
 # === SI-SDR 계산 함수 ===
 def compute_sisdr(est, ref):
@@ -31,7 +28,7 @@ def evaluate_demucs_on_folder(folder):
         mixture = mixture.mean(dim=0, keepdim=True)
 
     # 2. 모델 로드 및 분리
-    model = load_model(MODEL_PATH)
+    model, _ = load_model()  # load_model()은 인자가 필요 없음
     model.eval()
     with torch.no_grad():
         estimates = separate(model, mixture.unsqueeze(0))  # shape: [1, 5, 1, time]
